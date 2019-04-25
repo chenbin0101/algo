@@ -1,0 +1,94 @@
+/**
+ * 求一个数的平方根，保留小数点6位
+ * 思路:1)根据对应的数字，x*x < n < (x+1)*(x+1),先获取x这个整数,利用二分法获取
+ *     2)根据需要保留的小数点位数digits,分成digits+2个桶，从高位依次存储对应的小数
+ *     3)四舍五入
+ *
+ */
+public class SquareNum {
+
+	public static void main(String[] args) {
+		double i = squareByDigits (-16, 6);
+		double j = Math.sqrt (9);
+		System.out.println (i);
+		System.out.println (getResult (6, j));
+	}
+
+	public static double squareByDigits(double number, int digits) {
+		long n = squareInteger ((int) number);
+		return getDecimalByDights (n, number, digits);
+	}
+
+	public static long squareInteger(int number) {
+		if (number <= 0 || number > Integer.MAX_VALUE) { return 0; }
+		if (number < 10) { return getSmall (number); }
+		long mid = number / 10;
+		while (true) {
+			long result = mid * mid;
+			if (result == number) { return mid; }
+			if (result > number) {
+				if (result / number > 2) {
+					mid = mid >> 1;
+				}
+				else {
+					--mid;
+					if (mid * mid < number) { return mid; }
+				}
+			}
+			else if (result < number) {
+				if (number / result > 2) {
+					mid = mid << 1;
+				}
+				else {
+					++mid;
+					if (mid * mid > number) { return mid - 1; }
+				}
+			}
+		}
+	}
+
+	public static double getDecimalByDights(long i, double number, int digits) {
+		if (number <= 0) { return 0; }
+		if (i * i == number) { return getResult (digits, i); }
+		//运用桶的思路,从高位开始循环计算
+		//+2是因为 第1位不参与循环，最后一位是为了四舍五入
+		double[] digitArray = new double[digits + 2];
+		//第一位记录i的值，方便后面运算
+		digitArray[0] = i;
+		for (int k = 1; k < digitArray.length; k++) {
+			double y = digitArray[k - 1];
+			for (int j = 9; j >= 0; j--) {
+				double x = j * Math.pow (10, -k);
+				//如果小于该数，就记录下来，终止当前循环
+				if ((y + x) * (y + x) <= number) {
+					//保存这个值
+					digitArray[k] = x + digitArray[k - 1];
+					break;
+				}
+			}
+		}
+		double result = digitArray[digits];
+		//取最后一位数据
+		String temp = digitArray[digits + 1] + "";
+		//四舍五入，判断最后一位>=5，如果大于，进1位
+		int temp1 = Integer.parseInt (temp.charAt (temp.length () - 1) + "");
+		if (temp1 >= 5) {
+			result += Math.pow (10, -digits);
+		}
+		return result;
+	}
+
+	//获取小数点后几位的数据
+	public static double getResult(int digits, double i) {
+		String s = String.format ("%." + digits + "f", i);
+		return Double.parseDouble (s);
+	}
+
+	private static int getSmall(int number) {
+		for (int i = 1; i < number; i++) {
+			if (i * i == number) { return i; }
+			if (i * i < number && (i + 1) * (i + 1) > number) { return i; }
+		}
+		return 0;
+	}
+}
